@@ -1,2 +1,2 @@
 # python-voice-chat
-python client/server voice chat encrypted using AES algorithm, runs on TCP uses MACaddress as key
+python client/server voice chat uses pyaudio library to record and encrypts the sound file  using AES algorithm. TCP protocol is the transmission protocol.
