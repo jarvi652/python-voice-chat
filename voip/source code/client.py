@@ -20,13 +20,12 @@ def clientServer(protocol):
             key = kdf[:16]
             return key
         tcpkey = get_key(MACaddress)
-        # Initialising TCP socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         s.connect((ip, port))
-        while True: #creates an infinite loop
+        while True:
             try:
                 print('connected to server')
-                chunk_size = 1024  # buffer_size (frames per buffer)
+                chunk_size = 1024
                 audio_format = pyaudio.paInt16
                 channels = 1
                 rate = 20000  # frame rate
