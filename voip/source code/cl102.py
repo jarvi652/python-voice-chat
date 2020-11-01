@@ -1,7 +1,6 @@
 import socket
 import pyaudio
 import threading
-import wave
 from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Util.Padding import pad,unpad
@@ -20,43 +19,18 @@ class Client:
                 self.address = input('enter  Computer-name:')
             except:
                 print("Cannot connect to Server")
-                pass
+            chunk_size = 1024
+            audio_format = pyaudio.paInt16
+            channels = 1
+            rate = 20000
+            seconds = 5
+            #initialising microphone recording
+            self.p = pyaudio.PyAudio()
+            self.record_stream = self.p.open(format=audio_format, channels=channels, rate=rate, input=True,
+                                   frames_per_buffer=chunk_size)
             # start thread
             threading.Thread(target=self.recieve_server).start()
             self.encrypt_stream()
-    def audio_recording(self):
-        chunk_size = 1024
-        audio_format = pyaudio.paInt16
-        channels = 1
-        rate = 20000
-        seconds = 5
-        filename = "myfile.wav"
-        # initialising microphone recording
-        print("recording has begun")
-        p = pyaudio.PyAudio()
-        play_stream = p.open(format=audio_format, channels=channels, rate=rate, output=True,
-                                       frames_per_buffer=chunk_size)
-        record_stream = p.open(format=audio_format, channels=channels, rate=rate, input=True,
-                                         frames_per_buffer=chunk_size)
-        frames = []
-        for i in range(0, int(rate/chunk_size * seconds)):
-            data = record_stream.write(1024)
-            frames.append(data)
-        print("okay, wait abit")
-        record_stream.stop_stream()
-        record_stream.close()
-        p.terminate()
-        wf= wave.open(filename, "wb")
-        wf.setnchannels(channels)
-        wf.setsampwidth(p.get_sample_size(audio_format))
-        wf.setframerate(rate)
-        wf.writeframes(b'' .join(frames))
-        with open(filename, 'rb') as outFile:
-            chunk = outFile.read(chunk_size)
-        print("Recording completed please wait")
-        return chunk
-
-
     def get_key(self):
         name=self.address
         salt = b"this is a salt"
@@ -73,7 +47,6 @@ class Client:
                 ct = b64decode(b64['ciphertext'])
                 cipher = AES.new(tcpkey, AES.MODE_CBC, iv=iv)
                 pt = unpad(cipher.decrypt(ct), AES.block_size)
-
             except:
                 pass
 
@@ -81,17 +54,19 @@ class Client:
         while 1:
             try:
                 tcpkey=self.get_key()
-                data=self.audio_recording()
-                cipher = AES.new(tcpkey, AES.MODE_CBC)
-                ct_bytes = cipher.encrypt(pad(data, AES.block_size))
-                iv = b64encode(cipher.iv).decode('utf-8')
-                ct = b64encode(ct_bytes).decode('utf-8')
-                result = dumps({'iv': iv, 'ciphertext': ct})
-                self.s.send(result.encode())
+                chunk_size = 1024
+                rate = 20000
+                seconds = 5
+                frames = []
+                for i in range(0, int(rate / chunk_size * seconds)):
+                    data = self.record_stream.write(1024)
+                    frames.append(data)
+                    cipher = AES.new(tcpkey, AES.MODE_CBC)
+                    ct_bytes = cipher.encrypt(pad(bytes(frames), AES.block_size))
+                    iv = b64encode(cipher.iv).decode('utf-8')
+                    ct = b64encode(ct_bytes).decode('utf-8')
+                    result = dumps({'iv': iv, 'ciphertext': ct})
+                    self.s.send(result.encode())
             except:
-                pass
-
-
-
-
+                Client()
 client=Client()
