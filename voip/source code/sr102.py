@@ -8,6 +8,7 @@ from Crypto.Util.Padding import unpad
 from base64 import b64decode
 from json import loads
 
+
 class Server:
     def __init__(self):
         self.ip = socket.gethostbyname(socket.gethostname())
@@ -22,28 +23,31 @@ class Server:
             except:
                 print("Couldn't bind client")
                 Server()
-        self.connections =[]
+        self.connections = []
         self.accept_connections()
+
     def accept_connections(self):
-        self.s.listen(1)
+        self.s.listen(2)
         print('waiting for connections...')
         while True:
             conn, addr = self.s.accept()
             print("Client: " + str(addr[0]) + " connected")
             self.connections.append(conn)
 
-            threading.Thread(target=self.handle_client, args=(conn, addr,)).start()
-    def broadcast(self,sock, data):
+            threading.Thread(target=self.handle_client, args=(conn, addr)).start()
+
+    def broadcast(self, sock, data):
         for client in self.connections:
             if client != self.s and client != sock:
                 try:
                     client.send(data)
                 except:
                     Server()
-    def handle_client(self,conn,addr):
+
+    def handle_client(self, conn, addr):
         while 1:
             try:
-                data=conn.recv(1024)
+                data = conn.recv(1024)
                 chunk_size = 1024
                 audio_format = pyaudio.paInt16
                 channels = 1
@@ -54,11 +58,11 @@ class Server:
                 p = pyaudio.PyAudio()
                 play_stream = p.open(format=audio_format, channels=channels, rate=rate, output=True,
                                      frames_per_buffer=chunk_size)
-                i=1
-                while data !='':
+                i = 1
+                while data != '':
                     play_stream.write(data)
                     data = conn.recv(1024)
-                    i=i+1
+                    i = i + 1
                     print(i)
                     frames.append(data)
                 wf = wave.open(filename, "wb")
@@ -70,13 +74,10 @@ class Server:
                 play_stream.stop_stream()
                 play_stream.close()
                 p.terminate()
-                self.broadcast(conn,data)
+                self.broadcast(conn, data)
             except socket.error:
                 conn.close()
                 Server()
 
 
-
-
-server=Server()
-
+server = Server()

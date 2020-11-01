@@ -30,7 +30,7 @@ class Client:
                                    frames_per_buffer=chunk_size)
             # start thread
             threading.Thread(target=self.recieve_server).start()
-            self.encrypt_stream()
+            self.send_server()
     def get_key(self):
         name=self.address
         salt = b"this is a salt"
@@ -47,10 +47,20 @@ class Client:
                 ct = b64decode(b64['ciphertext'])
                 cipher = AES.new(tcpkey, AES.MODE_CBC, iv=iv)
                 pt = unpad(cipher.decrypt(ct), AES.block_size)
+                return pt.decode()
             except:
                 pass
 
+    def send_server(self):
+        while 1:
+            try:
+                message = bytes(self.encrypt_stream())
+                self.s.send(message)
+            except:
+                Client()
+
     def encrypt_stream(self):
+        global result
         while 1:
             try:
                 tcpkey=self.get_key()
@@ -66,7 +76,7 @@ class Client:
                     iv = b64encode(cipher.iv).decode('utf-8')
                     ct = b64encode(ct_bytes).decode('utf-8')
                     result = dumps({'iv': iv, 'ciphertext': ct})
-                    self.s.send(result.encode())
+                return result
             except:
-                Client()
+                pass
 client=Client()
