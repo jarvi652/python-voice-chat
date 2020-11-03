@@ -3,17 +3,18 @@ import pyaudio
 import threading
 from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Util.Padding import pad,unpad
-from base64 import b64encode,b64decode
-from json import dumps,loads
+from Crypto.Util.Padding import pad, unpad
+from base64 import b64encode, b64decode
+from json import dumps, loads
+
 
 class Client:
     def __init__(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         while 1:
             try:
-                self.ip =input('enter server IP:')
-                self.port=int(input('enter target port of server:'))
+                self.ip = input('enter server IP:')
+                self.port = int(input('enter target port of server:'))
                 print("Server ip:" + self.ip + "\nPort:" + str(self.port))
                 self.s.connect((self.ip, self.port))
                 self.address = input('enter  Computer-name:')
@@ -24,20 +25,22 @@ class Client:
             channels = 1
             rate = 20000
             seconds = 5
-            #initialising microphone recording
+            # initialising microphone recording
             self.p = pyaudio.PyAudio()
             self.record_stream = self.p.open(format=audio_format, channels=channels, rate=rate, input=True,
-                                   frames_per_buffer=chunk_size)
+                                             frames_per_buffer=chunk_size)
             # start thread
-            threading.Thread(target=self.recieve_server).start()
+            threading.Thread(target=self.encrypt_stream).start()
             self.send_server()
+
     def get_key(self):
-        name=self.address
+        name = self.address
         salt = b"this is a salt"
         kdf = PBKDF2(name, salt, 16, 1000)
         key = kdf[:16]
         return key
-    def recieve_server(self):
+
+    def receive_server(self):
         while 1:
             try:
                 tcpkey = self.get_key()
@@ -63,7 +66,7 @@ class Client:
         global result
         while 1:
             try:
-                tcpkey=self.get_key()
+                tcpkey = self.get_key()
                 chunk_size = 1024
                 rate = 20000
                 seconds = 5
@@ -78,5 +81,7 @@ class Client:
                     result = dumps({'iv': iv, 'ciphertext': ct})
                 return result
             except:
-                pass
-client=Client()
+                Client()
+
+
+client = Client()

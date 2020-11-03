@@ -77,6 +77,7 @@ class Server:
                 self.broadcast(conn, data)
             except socket.error:
                 conn.close()
+                print("Server session interrupted")
                 Server()
 
 
