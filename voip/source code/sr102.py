@@ -30,6 +30,7 @@ class Server:
                     data = conn.recv(1024)
                     i = i + 1
                     frames.append(data)
+                    print(i)
                 wf = wave.open(filename, "wb")
                 wf.setnchannels(channels)
                 wf.setsampwidth(p.get_sample_size(audio_format))
