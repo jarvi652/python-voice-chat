@@ -18,25 +18,17 @@ class Server:
                 audio_format = pyaudio.paInt16
                 channels = 1
                 rate = 20000
-                seconds = 5
                 frames = []
-                filename = "myfile.wav"
                 p = pyaudio.PyAudio()
                 play_stream = p.open(format=audio_format, channels=channels, rate=rate, output=True,
                                      frames_per_buffer=chunk_size)
                 i = 1
                 while data != '':
-                    play_stream.write(data)
                     data = conn.recv(1024)
+                    play_stream.write(data)
                     i = i + 1
                     frames.append(data)
                     print(i)
-                wf = wave.open(filename, "wb")
-                wf.setnchannels(channels)
-                wf.setsampwidth(p.get_sample_size(audio_format))
-                wf.setframerate(rate)
-                wf.writeframes(b''.join(frames))
-                wf.close()
                 play_stream.stop_stream()
                 play_stream.close()
                 p.terminate()
@@ -48,7 +40,6 @@ class Server:
     def __init__(self):
         self.ip = socket.gethostbyname(socket.gethostname())
         self.port = int(input('Enter port number to run on --> '))
-        self.address = input('enter  Computer-name -->')
         print("Server ip:" + self.ip)
         while 1:
             try:
@@ -79,7 +70,5 @@ class Server:
                 except:
                     self.__class__()
 
-
-
-
-server = Server()
+if __name__ == '__main__':
+    server = Server()
